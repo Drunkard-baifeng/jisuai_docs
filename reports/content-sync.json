@@ -1,0 +1,97 @@
+{
+  "fetchedAt": "2026-10-13T15:35:04.046Z",
+  "sourceSha256": "e971458c906be8f2034b8aadba2225b0b3ccc6d9eafc8f04358242ee54301f8b",
+  "targetHost": "jisuai.net",
+  "groups": 4,
+  "articleCount": 8,
+  "assets": [
+    "/media/canvas-channel-edit.png",
+    "/media/canvas-channel-save.png",
+    "/media/canvas-channels.png",
+    "/media/canvas-entry.png",
+    "/media/canvas-image-channel.png",
+    "/media/canvas-image-key-group.png",
+    "/media/canvas-image-workbench.png",
+    "/media/canvas-model-selection.png",
+    "/media/canvas-settings.png",
+    "/media/cc-switch-apps.png",
+    "/media/cc-switch-codex-settings.png",
+    "/media/cc-switch-edit.png",
+    "/media/cc-switch-import.png",
+    "/media/cc-switch-models.png",
+    "/media/cc-switch-settings.png"
+  ],
+  "articles": [
+    {
+      "slug": "introduction",
+      "title": "简介",
+      "characters": 2714
+    },
+    {
+      "slug": "faq",
+      "title": "常见问题",
+      "characters": 1906
+    },
+    {
+      "slug": "guide",
+      "title": "jisuai.net 使用指南",
+      "characters": 1612
+    },
+    {
+      "slug": "auto-config",
+      "title": "自动配置工具",
+      "characters": 6496
+    },
+    {
+      "slug": "openai-compatible-api",
+      "title": "通用 API 接入教程",
+      "characters": 5674
+    },
+    {
+      "slug": "gpt-image-quickstart",
+      "title": "GPT-Image 使用指南",
+      "characters": 7868
+    },
+    {
+      "slug": "errors",
+      "title": "错误处理与排障",
+      "characters": 2398
+    },
+    {
+      "slug": "gpt-image-canvas",
+      "title": "GPT 生图 · 画布使用",
+      "characters": 6907
+    }
+  ],
+  "changes": [
+    "域名与品牌替换为 jisuai.net，保留代码标识符大小写习惯",
+    "将原站个人微信联系方式替换为控制台支持说明",
+    "历史操作截图顶部替换为本站品牌",
+    "保留原始文章日期及技术内容；未验证目标域名的 API、模型分组和安装脚本"
+  ],
+  "localOverrides": {
+    "updatedAt": "2026-10-14",
+    "articles": [
+      "auto-config",
+      "gpt-image-canvas",
+      "introduction",
+      "faq"
+    ],
+    "removedArticles": [
+      "nodejs-setup",
+      "claude-code-quickstart",
+      "claude-groups-and-models",
+      "codex-quickstart",
+      "deepseek-switch-group",
+      "openclaw-quickstart",
+      "hermes-quickstart",
+      "deepseek-harness-quickstart",
+      "cherry-studio-quickstart",
+      "claude-desktop-config",
+      "vscode-gui-guide",
+      "claude-codex-collab",
+      "global-rules"
+    ],
+    "source": "用户提供的 CC Switch、极速画布操作步骤与截图，以及页面移除要求"
+  }
+}
