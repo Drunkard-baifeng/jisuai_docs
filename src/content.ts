@@ -1,9 +1,12 @@
 import raw from './data/docs.json'
 
-export interface Article { title: string; group: string; summary: string; updatedAt: string; bodyHtml: string }
+export interface Article { title: string; group: string; summary: string; updatedAt: string; path: string; bodyHtml: string }
 export interface NavItem { title: string; slug: string; icon: string }
 export const docs = raw as { defaultSlug: string; navGroups: { title: string; items: NavItem[] }[]; articles: Record<string, Article> }
 export const order = docs.navGroups.flatMap(group => group.items.map(item => ({ ...item, group: group.title })))
+export const docPath = (slug: string) => docs.articles[slug]?.path || '/not-found'
+const slugsByPath = new Map(Object.entries(docs.articles).map(([slug, article]) => [article.path, slug]))
+export const slugForPath = (path: string) => slugsByPath.get(path)
 const plainText = (html: string) => {
   const template = document.createElement('template')
   template.innerHTML = html

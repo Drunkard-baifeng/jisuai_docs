@@ -9,9 +9,8 @@ test('all published documents render with local assets and working navigation', 
   await expect(page.locator('h1')).toContainText('欢迎使用')
   for (const group of docs.navGroups) for (const item of group.items) {
     await page.locator('.side-nav').getByRole('link', { name: item.title.replace('jisuai.net 使用指南', '平台使用指南'), exact: true }).click()
-    await expect(page).toHaveURL(new RegExp('doc=' + item.slug + '$'))
+    await expect(page).toHaveURL(url => url.pathname === docs.articles[item.slug].path && !url.search)
     await expect(page.locator('.article-body h2').first()).toBeVisible()
-    await expect(page.locator('.article-body')).not.toContainText(new RegExp(['to', 'sky'].join(''), 'i'))
     const missing = await page.locator('.article-body img').evaluateAll(async imgs => {
       await Promise.all(imgs.map(img => {
         const image = img as HTMLImageElement
@@ -43,7 +42,7 @@ test('full-text search supports keyboard selection, empty results and dismiss', 
 })
 test('copy code and page links, theme and feedback persistence', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto('/?doc=openai-compatible-api')
+  await page.goto('/api')
   const code = await page.locator('pre code').first().textContent()
   await page.getByRole('button', { name: '复制代码', exact: true }).first().click()
   expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(code?.replace(/\r\n/g, '\n'))
@@ -57,13 +56,14 @@ test('copy code and page links, theme and feedback persistence', async ({ page, 
   await page.screenshot({ path: 'reports/dark-api.png', fullPage: false, animations: 'disabled' })
 })
 test('deep links, in-page anchors, history, invalid documents', async ({ page }) => {
-  await page.goto('/docs/?doc=auto-config#doc-heading-2')
+  await page.goto('/tools/cc-switch#doc-heading-2')
   await expect(page.locator('h1')).toHaveText('自动配置工具')
   await expect(page.locator('#doc-heading-2')).toBeInViewport()
-  await page.locator('.side-nav a[href="?doc=gpt-image-quickstart"]').click()
+  await page.locator('.side-nav a[href="/image/api"]').click()
   await page.goBack()
   await expect(page.locator('h1')).toHaveText('自动配置工具')
-  await page.goto('/?doc=missing-page')
+  await expect(page).toHaveURL(/\/tools\/cc-switch#doc-heading-2$/)
+  await page.goto('/missing-page')
   await expect(page.locator('h1')).toHaveText('这篇文档还未抵达')
   await page.getByRole('button', { name: '返回文档首页' }).click()
   await expect(page.locator('h1')).toContainText('欢迎使用')
@@ -76,14 +76,54 @@ test('desktop and mobile layouts with functional drawer and no horizontal overfl
   await page.screenshot({ path: 'reports/mobile.png', fullPage: true, animations: 'disabled' })
   await page.getByRole('button', { name: '切换文档目录' }).click()
   await expect(page.locator('.sidebar')).toHaveClass(/open/)
-  await page.locator('.side-nav a[href="?doc=openai-compatible-api"]').click()
+  await page.locator('.side-nav a[href="/api"]').click()
   await expect(page.locator('.sidebar')).not.toHaveClass(/open/)
   await expect(page.locator('h1')).toHaveText('通用 API 接入教程')
   for (const group of docs.navGroups) for (const item of group.items) {
-    await page.goto('/?doc=' + item.slug)
+    await page.goto(docs.articles[item.slug].path)
     await expect(page.locator('.article-body h2').first()).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), item.slug).toBe(true)
   }
-  await page.goto('/?doc=openai-compatible-api')
+  await page.goto('/api')
   await page.screenshot({ path: 'reports/mobile-api.png', fullPage: true })
+})
+
+test('legacy links redirect to canonical paths and keep section anchors', async ({ page }) => {
+  for (const [slug, article] of Object.entries(docs.articles) as [string, { path: string }][]) {
+    for (const prefix of ['/', '/docs/']) {
+      await page.goto(prefix + '?doc=' + slug + '#doc-heading-1')
+      await expect(page).toHaveURL(url => url.pathname === article.path && !url.search && url.hash === '#doc-heading-1')
+      await expect(page.locator('#doc-heading-1')).toBeInViewport()
+    }
+  }
+  await page.goto('/image/canvas/')
+  await expect(page).toHaveURL(/\/image\/canvas$/)
+  await page.reload()
+  await expect(page.locator('h1')).toHaveText('GPT 生图 · 画布使用')
+  await page.goto('/?doc=codex-quickstart')
+  await expect(page).toHaveURL(/\/not-found$/)
+  await expect(page.locator('h1')).toHaveText('这篇文档还未抵达')
+})
+
+test('homepage, article links, search and pagination use canonical paths', async ({ page }) => {
+  const paths = Object.values(docs.articles).map((article: any) => article.path)
+  for (const path of paths) {
+    await page.goto(path as string)
+    await expect(page.locator('.article-body h2').first()).toBeVisible()
+    const links = await page.locator('a[href]').evaluateAll(elements => elements.map(el => (el as HTMLAnchorElement).href).filter(href => new URL(href).origin === location.origin))
+    for (const href of links) {
+      const url = new URL(href)
+      expect(url.searchParams.has('doc')).toBe(false)
+      if (!url.pathname.startsWith('/media/')) expect(paths).toContain(url.pathname)
+    }
+  }
+  await page.goto('/')
+  await page.locator('.hero-actions .primary-button').click()
+  await expect(page).toHaveURL(/\/tools\/cc-switch$/)
+  await page.locator('.pagination .next').click()
+  await expect(page).toHaveURL(/\/image\/canvas$/)
+  await page.keyboard.press('Control+k')
+  await page.getByRole('textbox', { name: '搜索文档关键词' }).fill('画布')
+  await page.locator('.search-result').filter({ has: page.getByText('GPT 生图 · 画布使用', { exact: true }) }).click()
+  await expect(page).toHaveURL(/\/image\/canvas$/)
 })

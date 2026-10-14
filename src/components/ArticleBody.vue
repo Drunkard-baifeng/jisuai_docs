@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { slugForPath } from '../content'
 import hljs from 'highlight.js/lib/core'
 import bash from 'highlight.js/lib/languages/bash'
 import json from 'highlight.js/lib/languages/json'
@@ -47,9 +48,10 @@ async function click(event: MouseEvent) {
     return
   }
   const anchor = target.closest<HTMLAnchorElement>('a[href]')
-  if (!anchor || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return
+  if (!anchor || anchor.target === '_blank' || anchor.hasAttribute('download') || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return
   const href = new URL(anchor.href)
-  if (href.origin === location.origin && href.searchParams.has('doc')) { event.preventDefault(); emit('navigate', href.searchParams.get('doc')!, href.hash) }
+  const targetSlug = href.origin === location.origin ? slugForPath(href.pathname) : undefined
+  if (targetSlug && !href.search) { event.preventDefault(); emit('navigate', targetSlug, href.hash) }
 }
 watch(() => [props.html, props.slug], enhance, { immediate: true })
 onBeforeUnmount(() => observer?.disconnect())

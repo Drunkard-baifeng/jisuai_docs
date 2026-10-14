@@ -1,0 +1,133 @@
+<section class="docs-section-card">
+          <h2>适用场景</h2>
+          <p>如果你的应用支持自定义 OpenAI Provider、Base URL 和 API Key，就可以接入 jisuai.net。本教程适用于自建 Agent Harness、后端服务、自动化脚本，以及支持 OpenAI 兼容接口的第三方应用。</p>
+        </section>
+        <section class="docs-section-card">
+          <h2>接入参数</h2>
+          <table class="docs-data-table">
+            <thead><tr><th>配置项</th><th>填写值</th></tr></thead>
+            <tbody>
+              <tr><td>Provider / API 类型</td><td><code>OpenAI Compatible</code></td></tr>
+              <tr><td>Base URL</td><td><code>https://jisuai.net/v1</code></td></tr>
+              <tr><td>API Key</td><td>在 jisuai.net 控制台创建的 OpenAI 分组密钥</td></tr>
+              <tr><td>模型</td><td>填写控制台当前可用的实际模型 ID，例如 <code>gpt-5.6-sol</code></td></tr>
+            </tbody>
+          </table>
+          <p>如果应用要求填写完整接口地址，请使用：</p>
+          <ul class="docs-check-list">
+            <li>Chat Completions：<code>https://jisuai.net/v1/chat/completions</code></li>
+            <li>Responses：<code>https://jisuai.net/v1/responses</code></li>
+          </ul>
+          <blockquote><strong>不要重复拼接路径：</strong>SDK 的 <code>base_url</code> 已经填写到 <code>/v1</code> 时，不要再填成 <code>/v1/chat/completions</code>，SDK 会自动追加具体接口路径。</blockquote>
+        </section>
+        <section class="docs-section-card">
+          <h2>选择哪种接口</h2>
+          <table class="docs-data-table">
+            <thead><tr><th>接口</th><th>请求字段</th><th>适合场景</th></tr></thead>
+            <tbody>
+              <tr><td>Chat Completions</td><td><code>messages</code></td><td>兼容现有聊天客户端、旧版 SDK 和已有 OpenAI 接入代码</td></tr>
+              <tr><td>Responses</td><td><code>input</code></td><td>新建 Agent Harness、工具调用工作流和面向后续 OpenAI 能力演进的应用</td></tr>
+            </tbody>
+          </table>
+          <p>已有应用优先保持原接口，减少迁移成本；新建 Agent Harness 如果框架支持，建议优先使用 Responses API。不要把 Chat Completions 的 <code>messages</code> 原样传给 Responses 的 <code>input</code>。</p>
+        </section>
+        <section class="docs-section-card">
+          <h2>Chat Completions：curl</h2>
+          <pre><code>export JISUAI_API_KEY="YOUR_JISUAI_API_KEY"
+
+curl https://jisuai.net/v1/chat/completions \
+  -H "Authorization: Bearer $JISUAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6-sol",
+    "messages": [
+      {"role": "system", "content": "你是一个简洁的编程助手。"},
+      {"role": "user", "content": "用 Python 写一个二分查找函数。"}
+    ]
+  }'</code></pre>
+        </section>
+        <section class="docs-section-card">
+          <h2>Chat Completions：Python SDK</h2>
+          <pre><code>import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["JISUAI_API_KEY"],
+    base_url="https://jisuai.net/v1",
+)
+
+completion = client.chat.completions.create(
+    model="gpt-5.6-sol",
+    messages=[
+        {"role": "system", "content": "你是一个简洁的编程助手。"},
+        {"role": "user", "content": "解释什么是 Agent Harness。"},
+    ],
+)
+
+print(completion.choices[0].message.content)</code></pre>
+        </section>
+        <section class="docs-section-card">
+          <h2>Responses：curl</h2>
+          <pre><code>export JISUAI_API_KEY="YOUR_JISUAI_API_KEY"
+
+curl https://jisuai.net/v1/responses \
+  -H "Authorization: Bearer $JISUAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5.6-sol",
+    "input": "列出构建 Agent Harness 时最重要的三个模块。"
+  }'</code></pre>
+        </section>
+        <section class="docs-section-card">
+          <h2>Responses：Python SDK</h2>
+          <pre><code>import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.environ["JISUAI_API_KEY"],
+    base_url="https://jisuai.net/v1",
+)
+
+response = client.responses.create(
+    model="gpt-5.6-sol",
+    input="给出一个最小可用 Agent Harness 的目录结构。",
+)
+
+print(response.output_text)</code></pre>
+        </section>
+        <section class="docs-section-card">
+          <h2>自建 Agent Harness 的配置建议</h2>
+          <pre><code>JISUAI_API_KEY=YOUR_JISUAI_API_KEY
+OPENAI_BASE_URL=https://jisuai.net/v1
+OPENAI_MODEL=gpt-5.6-sol
+OPENAI_API_MODE=responses</code></pre>
+          <ul class="docs-check-list">
+            <li>服务端从环境变量读取 API Key，不要把密钥写入源码或前端包。</li>
+            <li>把 <code>base_url</code>、模型和接口模式做成独立配置，避免在业务代码中散落硬编码。</li>
+            <li>设置合理的连接超时、总超时和有限次数重试；不要对 401、403 等鉴权错误盲目重试。</li>
+            <li>记录请求 ID、模型、耗时和状态码，不要在日志中记录完整 API Key。</li>
+            <li>需要流式输出时，在请求中加入 <code>stream: true</code>，并确认你的 SDK 或客户端支持对应接口的流事件格式。</li>
+          </ul>
+        </section>
+        <section class="docs-section-card">
+          <h2>第三方应用怎么填</h2>
+          <ol class="docs-ordered-list">
+            <li>Provider 选择 <strong>OpenAI</strong>、<strong>OpenAI Compatible</strong> 或<strong>自定义 OpenAI</strong>。</li>
+            <li>Base URL 填 <code>https://jisuai.net/v1</code>。</li>
+            <li>API Key 填 jisuai.net 控制台创建的密钥。</li>
+            <li>接口模式可选时，按应用支持情况选择 <code>Chat Completions</code> 或 <code>Responses</code>。</li>
+            <li>填写实际模型 ID，保存后发送一条最小测试请求。</li>
+          </ol>
+          <p>如果应用会自动在地址末尾拼接 <code>/v1</code>，则按它的字段说明填写 <code>https://jisuai.net</code>；判断标准是最终请求必须落到上面列出的完整接口地址，不能出现重复的 <code>/v1/v1</code>。</p>
+        </section>
+        <section class="docs-section-card">
+          <h2>最小验证与排障</h2>
+          <ol class="docs-ordered-list">
+            <li>先用本文的 curl 示例验证密钥、模型和接口是否可用。</li>
+            <li>curl 成功后再配置 SDK 或第三方应用，避免同时排查多个变量。</li>
+            <li><code>401</code>：检查 Authorization 是否为 <code>Bearer API_KEY</code>，以及密钥是否完整有效。</li>
+            <li><code>404</code>：检查域名、<code>/v1</code> 和接口路径，确认使用 <code>https://jisuai.net</code>。</li>
+            <li><code>400</code>：检查所选 API 对应的请求结构，以及模型 ID 是否正确。</li>
+            <li><code>429</code>：检查余额、额度和速率限制，并采用指数退避重试。</li>
+          </ol>
+        </section>

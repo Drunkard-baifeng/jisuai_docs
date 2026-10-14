@@ -1,0 +1,123 @@
+{
+  "defaultSlug": "introduction",
+  "navGroups": [
+    {
+      "title": "站点介绍",
+      "items": [
+        {
+          "title": "简介",
+          "slug": "introduction",
+          "icon": "spark"
+        },
+        {
+          "title": "常见问题",
+          "slug": "faq",
+          "icon": "book"
+        },
+        {
+          "title": "jisuai.net 使用指南",
+          "slug": "guide",
+          "icon": "layout"
+        }
+      ]
+    },
+    {
+      "title": "环境准备",
+      "items": [
+        {
+          "title": "自动配置工具",
+          "slug": "auto-config",
+          "icon": "flash"
+        }
+      ]
+    },
+    {
+      "title": "快速接入",
+      "items": [
+        {
+          "slug": "gpt-image-canvas",
+          "title": "GPT 生图 · 画布使用",
+          "icon": "layout"
+        },
+        {
+          "title": "GPT-Image 使用指南",
+          "slug": "gpt-image-quickstart",
+          "icon": "globe"
+        },
+        {
+          "title": "通用 API 接入教程",
+          "slug": "openai-compatible-api",
+          "icon": "link"
+        }
+      ]
+    },
+    {
+      "title": "进阶指南",
+      "items": [
+        {
+          "title": "错误处理与排障",
+          "slug": "errors",
+          "icon": "warning"
+        }
+      ]
+    }
+  ],
+  "articles": {
+    "introduction": {
+      "title": "简介",
+      "group": "站点介绍",
+      "summary": "jisuai.net 是一个面向开发者和团队的 AI 编码接入平台，一个账号同时使用 Claude Code、Codex 和 DeepSeek。",
+      "updatedAt": "2026-10-14",
+      "path": "/"
+    },
+    "faq": {
+      "title": "常见问题",
+      "group": "站点介绍",
+      "summary": "关于 jisuai.net 的常见问题与解答，帮助你快速了解平台的核心概念和使用方式。",
+      "updatedAt": "2026-10-14",
+      "path": "/faq"
+    },
+    "guide": {
+      "title": "jisuai.net 使用指南",
+      "group": "站点介绍",
+      "summary": "从注册到使用的完整流程，帮助你快速上手 jisuai.net 平台。",
+      "updatedAt": "2025-04-28",
+      "path": "/guide"
+    },
+    "auto-config": {
+      "title": "自动配置工具",
+      "group": "环境准备",
+      "summary": "使用 CC Switch 图形界面管理 Claude Code、Claude Desktop、Codex、Gemini CLI、OpenCode、OpenClaw 等多个应用：选择应用、开启显示、导入 API 密钥并完成配置，附 Codex 设置与模型配置示例。",
+      "updatedAt": "2026-10-14",
+      "path": "/tools/cc-switch"
+    },
+    "openai-compatible-api": {
+      "title": "通用 API 接入教程",
+      "group": "快速接入",
+      "summary": "面向自建 Agent Harness、服务端应用和第三方客户端，通过 OpenAI 兼容的 Chat Completions 或 Responses API 接入 jisuai.net。",
+      "updatedAt": "2026-08-12",
+      "path": "/api"
+    },
+    "gpt-image-quickstart": {
+      "title": "GPT-Image 使用指南",
+      "group": "快速接入",
+      "summary": "使用 jisuai.net 提供的 GPT-Image AI 图片生成服务，支持文生图与以图改图，兼容 OpenAI 接口格式。",
+      "updatedAt": "2026-05-28",
+      "path": "/image/api"
+    },
+    "errors": {
+      "title": "错误处理与排障",
+      "group": "进阶指南",
+      "summary": "遇到连接失败、认证错误或异常返回时的排查思路和解决方案。",
+      "updatedAt": "2025-04-28",
+      "path": "/help"
+    },
+    "gpt-image-canvas": {
+      "title": "GPT 生图 · 画布使用",
+      "group": "快速接入",
+      "summary": "从控制台进入极速画布，添加渠道并配置 API Key，拉取、全选模型并保存。生图使用生图分组密钥，最后在生图工作台中输入提示词、选择模型并生成图片。",
+      "updatedAt": "2026-10-14",
+      "path": "/image/canvas"
+    }
+  }
+}

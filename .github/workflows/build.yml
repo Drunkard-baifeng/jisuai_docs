@@ -29,7 +29,7 @@ jobs:
       - name: Check maintained content is in sync
         run: |
           npm run update:docs
-          git diff --exit-code -- src/data/docs.json reports/content-sync.json
+          git diff --exit-code -- src/data/docs.json
       - run: npm run check:content
       - run: npm run build
       - run: npx playwright install --with-deps chromium
@@ -95,7 +95,7 @@ jobs:
           done
           test "$(docker exec docs-check id -u)" != 0
           curl -fsS http://127.0.0.1:8080/healthz | grep -q ok
-          curl -fsS 'http://127.0.0.1:8080/docs/?doc=gpt-image-canvas' | grep -q 'id="app"'
+          curl -fsS 'http://127.0.0.1:8080/image/canvas' | grep -q 'id="app"'
           curl -fsS -o /dev/null http://127.0.0.1:8080/media/canvas-entry.png
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/assets/missing.js)" = 404
           curl -fsSI http://127.0.0.1:8080/index.html | grep -qi 'cache-control: no-cache'

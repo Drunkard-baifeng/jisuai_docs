@@ -8,6 +8,5 @@ dist
 *.tsbuildinfo
 test-results
 playwright-report
-reports/*
-!reports/content-sync.json
+reports
 README.md

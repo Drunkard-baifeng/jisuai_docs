@@ -3,26 +3,26 @@ import { readFile, access, readdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve, dirname, extname } from 'node:path'
 import { load } from 'cheerio'
-import { collectLocalAssets, removedArticleSlugs } from './apply-local-docs.mjs'
+import { collectLocalAssets } from './content-assets.mjs'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const docs = JSON.parse(await readFile(resolve(root, 'src/data/docs.json'), 'utf8'))
-const report = JSON.parse(await readFile(resolve(root, 'reports/content-sync.json'), 'utf8'))
 const order = docs.navGroups.flatMap(group => group.items)
 assert.equal(new Set(order.map(item => item.slug)).size, order.length, 'Navigation slugs must be unique')
 assert.equal(order.length, Object.keys(docs.articles).length, 'Every article must be linked from navigation')
-assert.equal(report.articleCount, order.length, 'Sync report count must match')
+assert(docs.articles[docs.defaultSlug], 'Default article must exist')
+const paths = new Set(Object.values(docs.articles).map(article => article.path))
+assert.equal(paths.size, order.length, 'Article paths must be unique')
+const sources = (await readdir(resolve(root, 'content'))).filter(name => name.endsWith('.html')).sort()
+assert.deepEqual(sources, Object.keys(docs.articles).map(slug => slug + '.html').sort(), 'Every article must have exactly one local source')
 const assets = collectLocalAssets(docs)
-assert.deepEqual(report.assets, assets, 'Report assets must match published content')
 const mediaFiles = (await readdir(resolve(root, 'public/media'))).map(name => '/media/' + name).sort()
 assert.deepEqual(mediaFiles, assets, 'Remove unused images and include every referenced asset')
-for (const slug of removedArticleSlugs) {
-  assert(!docs.articles[slug], 'Removed article must not be published: ' + slug)
-  assert(!order.some(item => item.slug === slug), 'Removed article must not appear in navigation: ' + slug)
-}
 let codeBlocks = 0, images = 0, links = 0
 for (const item of order) {
   const article = docs.articles[item.slug]
-  assert(article?.title && article.summary && article.updatedAt && article.bodyHtml, 'Incomplete article: ' + item.slug)
+  assert(article?.title && article.summary && article.updatedAt && article.bodyHtml && article.path, 'Incomplete article: ' + item.slug)
+  assert(/^\/(?:[a-z0-9-]+(?:\/[a-z0-9-]+)*)?$/.test(article.path), 'Invalid article path: ' + item.slug)
+  assert.equal(article.bodyHtml, await readFile(resolve(root, 'content', item.slug + '.html'), 'utf8'), 'Run npm run update:docs after editing ' + item.slug)
   const $ = load(article.bodyHtml)
   assert($('h2').length, 'Missing sections: ' + item.slug)
   assert.equal($('script,iframe,object,embed').length, 0, 'Remote active content is not allowed')
@@ -30,8 +30,11 @@ for (const item of order) {
   for (const el of $('a[href]').toArray()) {
     links++
     const href = $(el).attr('href')
-    if (href.startsWith('?doc=')) assert(docs.articles[new URL(href, 'https://jisuai.net').searchParams.get('doc')], 'Broken document link ' + href)
-    if (/^\//.test(href)) assert(href.startsWith('/media/'), 'Unresolved source-site link ' + href)
+    const url = new URL(href, 'https://docs.jisuai.net')
+    if (url.origin === 'https://docs.jisuai.net') {
+      assert(!url.searchParams.has('doc'), 'Use canonical document paths: ' + href)
+      if (!url.pathname.startsWith('/media/')) assert(paths.has(url.pathname), 'Broken document link ' + href)
+    }
   }
   for (const el of $('img').toArray()) {
     images++
@@ -42,13 +45,12 @@ for (const item of order) {
   }
   $('pre code').each((_, el) => { codeBlocks++; assert($(el).text().trim(), 'Empty code example') })
 }
-const forbidden = new RegExp(['to', 'sky'].join(''), 'i')
 async function scan(directory) {
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const path = resolve(directory, entry.name)
     if (entry.isDirectory()) await scan(path)
-    else if (['.json','.ts','.vue','.css','.html','.js','.svg'].includes(extname(path))) assert(!forbidden.test(await readFile(path, 'utf8')), 'Original brand remains: ' + path)
+    else if (['.json','.ts','.vue','.css','.html','.js','.svg'].includes(extname(path))) assert(!/sk-[a-zA-Z0-9]{32,}/.test(await readFile(path, 'utf8')), 'Unexpected API credential: ' + path)
   }
 }
 await scan(resolve(root, 'src')); await scan(resolve(root, 'public'))
-console.log(JSON.stringify({ passed: true, groups: docs.navGroups.length, articles: order.length, codeBlocks, images, links, localAssets: report.assets.length }, null, 2))
+console.log(JSON.stringify({ passed: true, groups: docs.navGroups.length, articles: order.length, codeBlocks, images, links, localAssets: assets.length }, null, 2))

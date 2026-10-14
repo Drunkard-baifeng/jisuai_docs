@@ -7,7 +7,6 @@ playwright-report/
 test-results/
 *.log
 *.tsbuildinfo
-reports/*
-!reports/content-sync.json
+reports/
 .DS_Store
 Thumbs.db

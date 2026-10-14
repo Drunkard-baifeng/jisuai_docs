@@ -1,0 +1,229 @@
+<section class="docs-section-card">
+          <h2>GPT-Image 简介</h2>
+          <p>jisuai.net 提供与 OpenAI 兼容的图片生成接口，支持<strong>文生图</strong>和<strong>以图改图</strong>两种模式，同步返回结果，无需轮询。</p>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>准备工作</h2>
+          <h3>1. 创建 API Key</h3>
+          <p>前往 <a href="https://jisuai.net/keys" target="_blank" rel="noopener noreferrer">API Keys 管理页面</a>，点击「创建 API Key」，分组选择 <strong>GPT-Image</strong>。</p>
+          <p>创建完成后请妥善保存，后续所有请求都需要在 Header 中携带此 Key。</p>
+
+          <h3>2. 接口地址</h3>
+          <pre><code>Base URL：https://jisuai.net/v1</code></pre>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>AI Agent 一键接入</h2>
+          <p>如果你使用 Claude Code、Cursor、Codex 等 AI 编码工具，复制以下提示词发送给你的 AI，它会立即学会生图能力：</p>
+          <pre><code>你现在拥有了图片生成和图片编辑能力，请记住以下 API 规范：
+
+【图片生成 API】
+- 接口：POST https://jisuai.net/v1/images/generations
+- Headers：Content-Type: application/json、Authorization: Bearer YOUR_API_KEY
+- Body：{"model":"gpt-image-2","prompt":"图片描述","n":1,"size":"1024x1024"}
+- size 可选值：1024x1024（方形）、1536x1536（高清方形）、2048x2048（超清方形）、1792x1024 或 2048x1024（横版）、1024x1792 或 1024x2048（竖版）
+- 响应：data[0].b64_json 是 base64 编码的 PNG，解码后保存为 .png 文件
+
+【以图改图 API】
+- 接口：POST https://jisuai.net/v1/images/edits
+- Headers：Authorization: Bearer YOUR_API_KEY
+- 格式：multipart/form-data
+- 字段：model=gpt-image-2、prompt=修改描述、image=@图片文件路径、size=1024x1024
+- 响应：同上，data[0].b64_json 为修改后的图片
+
+【使用规则】
+- 用 curl 调用，将返回的 b64_json 用 base64 解码保存为 png 文件
+- 生成后自动打开图片让用户查看
+- 当用户说"生成图片/画一张/生图"时调用生成接口
+- 当用户说"修改这张图/改一下/以图改图"时调用编辑接口
+- API Key：YOUR_API_KEY
+
+现在帮我生成一张图片试试：一只穿着宇航服的猫咪漂浮在太空中</code></pre>
+          <p>将 <code>YOUR_API_KEY</code> 替换为你在 <a href="https://jisuai.net/keys" target="_blank" rel="noopener noreferrer">控制台</a> 创建的 Key（分组选择 GPT-Image）。发送后 AI 将立即具备生图和改图能力，之后只需说「帮我生成一张 XXX」即可。</p>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>文生图（Text to Image）</h2>
+          <p>发送 JSON 请求，同步返回生成的图片：</p>
+          <pre><code>curl 'https://jisuai.net/v1/images/generations' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -d '{
+    "model": "gpt-image-2",
+    "prompt": "一只可爱的猫咪在阳光下打盹",
+    "n": 1,
+    "size": "1024x1024"
+  }'</code></pre>
+
+          <p><strong>成功响应：</strong></p>
+          <pre><code>{
+  "created": 1779902762,
+  "model": "gpt-image-2",
+  "data": [
+    {
+      "b64_json": "iVBORw0KGgo...(base64 编码的 PNG 图片)",
+      "revised_prompt": "AI 优化后的提示词"
+    }
+  ],
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 196,
+    "total_tokens": 224
+  }
+}</code></pre>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>以图改图（Image Edit）</h2>
+          <p>上传一张图片并描述修改需求，使用 multipart/form-data 格式：</p>
+          <pre><code>curl 'https://jisuai.net/v1/images/edits' \
+  -H 'Authorization: Bearer YOUR_API_KEY' \
+  -F 'model=gpt-image-2' \
+  -F 'prompt=把背景改成日落海滩' \
+  -F 'image=@/path/to/your/image.png' \
+  -F 'size=1024x1024'</code></pre>
+
+          <p><strong>成功响应：</strong></p>
+          <pre><code>{
+  "created": 1779905875,
+  "model": "gpt-image-2",
+  "data": [
+    {
+      "b64_json": "iVBORw0KGgo...(base64 编码的修改后图片)",
+      "revised_prompt": "AI 优化后的提示词"
+    }
+  ],
+  "usage": {
+    "input_tokens": 28,
+    "output_tokens": 196,
+    "total_tokens": 224
+  }
+}</code></pre>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>请求参数说明</h2>
+          <h3>文生图参数</h3>
+          <table class="docs-data-table">
+            <thead>
+              <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>model</code></td><td>string</td><td>是</td><td>固定为 <code>gpt-image-2</code></td></tr>
+              <tr><td><code>prompt</code></td><td>string</td><td>是</td><td>图片描述文本</td></tr>
+              <tr><td><code>n</code></td><td>number</td><td>否</td><td>生成数量，默认 1</td></tr>
+              <tr><td><code>size</code></td><td>string</td><td>否</td><td>图片尺寸：<code>1024x1024</code>、<code>1536x1536</code>、<code>2048x2048</code>、<code>1792x1024</code>、<code>2048x1024</code>、<code>1024x1792</code>、<code>1024x2048</code></td></tr>
+            </tbody>
+          </table>
+
+          <h3>以图改图参数</h3>
+          <table class="docs-data-table">
+            <thead>
+              <tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>model</code></td><td>string</td><td>是</td><td>固定为 <code>gpt-image-2</code></td></tr>
+              <tr><td><code>prompt</code></td><td>string</td><td>是</td><td>修改描述文本</td></tr>
+              <tr><td><code>image</code></td><td>file</td><td>是</td><td>原始图片文件（PNG/JPG）</td></tr>
+              <tr><td><code>size</code></td><td>string</td><td>否</td><td>输出尺寸：<code>1024x1024</code>、<code>1536x1536</code>、<code>2048x2048</code>、<code>1792x1024</code>、<code>2048x1024</code>、<code>1024x1792</code>、<code>1024x2048</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>响应字段说明</h2>
+          <table class="docs-data-table">
+            <thead>
+              <tr><th>字段</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>data[].b64_json</code></td><td>Base64 编码的 PNG 图片数据，需解码后保存</td></tr>
+              <tr><td><code>data[].revised_prompt</code></td><td>AI 优化后的实际提示词</td></tr>
+              <tr><td><code>usage.total_tokens</code></td><td>本次请求消耗的 Token 总量</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>代码示例</h2>
+
+          <h3>Python</h3>
+          <pre><code>import requests, base64, json
+
+API_KEY = "your-api-key"
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {API_KEY}"
+}
+
+# 文生图
+resp = requests.post(
+    "https://jisuai.net/v1/images/generations",
+    headers=headers,
+    json={
+        "model": "gpt-image-2",
+        "prompt": "赛博朋克风格的城市夜景",
+        "size": "1792x1024"
+    }
+)
+data = resp.json()
+img_bytes = base64.b64decode(data["data"][0]["b64_json"])
+with open("output.png", "wb") as f:
+    f.write(img_bytes)
+
+# 以图改图
+resp = requests.post(
+    "https://jisuai.net/v1/images/edits",
+    headers={"Authorization": f"Bearer {API_KEY}"},
+    files={"image": open("output.png", "rb")},
+    data={
+        "model": "gpt-image-2",
+        "prompt": "添加霓虹灯招牌和飞行汽车",
+        "size": "1792x1024"
+    }
+)
+edited = base64.b64decode(resp.json()["data"][0]["b64_json"])
+with open("edited.png", "wb") as f:
+    f.write(edited)</code></pre>
+
+          <h3>Node.js</h3>
+          <pre><code>const fs = require("fs");
+const FormData = require("form-data");
+
+const API_KEY = "your-api-key";
+const BASE = "https://jisuai.net/v1";
+
+// 文生图
+async function generate(prompt) {
+  const resp = await fetch(BASE + "/images/generations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-image-2",
+      prompt,
+      size: "1024x1024",
+    }),
+  });
+  const data = await resp.json();
+  const buf = Buffer.from(data.data[0].b64_json, "base64");
+  fs.writeFileSync("output.png", buf);
+}
+
+generate("水墨画风格的山水风景");</code></pre>
+        </section>
+
+        <section class="docs-section-card">
+          <h2>常见问题</h2>
+          <h3>返回 401 错误？</h3>
+          <p>确认 API Key 创建时选择的分组是 <strong>GPT-Image</strong>，其他分组的 Key 无法调用图片接口。</p>
+          <h3>图片质量不理想？</h3>
+          <p>尝试用更详细的 prompt 描述画面内容、风格、色调等细节。响应中的 <code>revised_prompt</code> 可以帮你了解 AI 实际理解的内容。</p>
+          <h3>Base64 数据如何使用？</h3>
+          <p>将 <code>b64_json</code> 字段进行 Base64 解码即可得到 PNG 图片的二进制数据，直接写入 <code>.png</code> 文件即可打开。</p>
+          <h3>支持哪些图片格式上传？</h3>
+          <p>以图改图接口支持 PNG 和 JPG 格式的图片上传。</p>
+        </section>
